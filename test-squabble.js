@@ -88,21 +88,9 @@ describe("ArgParser", function() {
         });
     });
 
-    describe(".flag", function() {
-        it("should define a flag option", function() {
-            var parser = squabble.createParser().flag("FOO"),
-                resultWithoutFlag = parser.parse([]),
-                resultWithFlag = parser.parse(["FOO"]);
-
-            expect(resultWithFlag.length).to.be(0);
-            expect(resultWithFlag.named.FOO).to.be(true);
-            expect(resultWithoutFlag.named.FOO).to.be(false);
-        });
-    });
-
-    describe(".value", function() {
-        it("should define an option requiring a value", function() {
-            var parser = squabble.createParser().value("FOO"),
+    describe(".option", function() {
+        it("should define standard option requiring a value", function() {
+            var parser = squabble.createParser().option("FOO"),
                 resultWithoutValue = parser.parse([]),
                 resultWithValue = parser.parse(["FOO", "bar"]);
 
@@ -112,8 +100,20 @@ describe("ArgParser", function() {
         });
 
         it("should throw an error if value is missing", function() {
-            var parser = squabble.createParser().value("FOO");
+            var parser = squabble.createParser().option("FOO");
             expect(parser.parse.bind(parser)).withArgs(["FOO"]).to.throwError();
+        });
+    });
+
+    describe(".flag", function() {
+        it("should define a flag option with no required value", function() {
+            var parser = squabble.createParser().flag("FOO"),
+                resultWithoutFlag = parser.parse([]),
+                resultWithFlag = parser.parse(["FOO"]);
+
+            expect(resultWithFlag.length).to.be(0);
+            expect(resultWithFlag.named.FOO).to.be(true);
+            expect(resultWithoutFlag.named.FOO).to.be(false);
         });
     });
 
@@ -157,13 +157,13 @@ describe("ArgParser", function() {
         });
 
         it("should ensure short opt not used as option value", function() {
-            var parser = squabble.createParser().shortOpts().value("-o");
+            var parser = squabble.createParser().shortOpts().option("-o");
 
             expect(parser.parse.bind(parser)).withArgs(["-o", "-p"]).to.throwError();
         });
 
         it("should handle adjoining option value", function() {
-            var parser = squabble.createParser().shortOpts().value("-f"),
+            var parser = squabble.createParser().shortOpts().option("-f"),
                 result = parser.parse(["-ofFOO"]);
 
             expect(result.named["-o"]).to.be(true);
@@ -180,9 +180,9 @@ describe("ArgParser", function() {
         });
 
         it("should ensure long opt not used as option value", function() {
-            var parser = squabble.createParser().longOpts().value("-o");
+            var parser = squabble.createParser().longOpts().option("--opt");
 
-            expect(parser.parse.bind(parser)).withArgs(["-o", "--foo"]).to.throwError();
+            expect(parser.parse.bind(parser)).withArgs(["--opt", "--foo"]).to.throwError();
         });
 
         it("should handle delimited option value", function() {
@@ -205,11 +205,9 @@ describe("ArgParser", function() {
         });
     });
 
-    describe(".lastOption", function() {
+    describe(".stopper", function() {
         it("should define an option which stops option parsing", function() {
-            var parser = squabble.createParser()
-                    .shortOpts()
-                    .lastOption(),
+            var parser = squabble.createParser().shortOpts().stopper(),
                 result = parser.parse(["-a", "--", "-b"]);
 
             expect(result.length).to.be(1);
@@ -218,10 +216,8 @@ describe("ArgParser", function() {
         });
 
         describe("w/ string argument", function() {
-            it("should customize option string for last option", function() {
-                var parser = squabble.createParser()
-                        .shortOpts()
-                        .lastOption("::"),
+            it("should customize stopper option", function() {
+                var parser = squabble.createParser().shortOpts().stopper("::"),
                     result = parser.parse(["-a", "::", "-b"]);
 
                 expect(result.length).to.be(1);
