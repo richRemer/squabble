@@ -20,11 +20,11 @@ describe("createParser", function() {
 
 describe("ArgParser", function() {
     describe(".parse", function() {
-        it("should make unrecognized arguments available in result", function() {
+        it("should pass through unrecognized args to result", function() {
             var parser = squabble.createParser(),
                 result = parser.parse(["hey", "ya"]);
 
-            expect(result).to.be.an("array");
+            expect(result).to.be.an(Array);            
             expect(result.length).to.be(2);
             expect(result[0]).to.be("hey")
             expect(result[1]).to.be("ya");
@@ -61,7 +61,7 @@ describe("ArgParser", function() {
 
     describe(".optional", function() {
         it("should define positional named optional arg", function() {
-            var parser = squabble.createParser().required("FOO"),
+            var parser = squabble.createParser().optional("FOO"),
                 result = parser.parse(["foo", "bar"]),
                 noArgResult = parser.parse([]);
 
@@ -71,7 +71,7 @@ describe("ArgParser", function() {
             expect(noArgResult.named.FOO).to.be(false);
         });
 
-        it("should base argument position on FIRST optional arg added", function() {
+        it("should position oargs when FIRST optional arg added", function() {
             var parser = squabble.createParser()
                     .required("FOO")
                     .optional("BAR")
@@ -84,7 +84,7 @@ describe("ArgParser", function() {
             expect(result.named.BAR).to.be("b");
             expect(result.named.BAZ).to.be("d");
             expect(result.named.BANG).to.be("c");
-            expect(result.named.BIFF).to.be(false); // missing arg; required BAZ assigned first
+            expect(result.named.BIFF).to.be(false); // missing arg
         });
     });
 
@@ -129,7 +129,7 @@ describe("ArgParser", function() {
     });
 
     describe(".list", function() {
-        it("should define option with required value for multiple uses", function() {
+        it("should define multi-use option w/ required value", function() {
             var parser = squabble.createParser().list("FOO"),
                 result = parser.parse(["FOO", "bar", "FOO", "baz"]);
             
@@ -141,16 +141,17 @@ describe("ArgParser", function() {
 
         it("should throw an error if value is missing", function() {
             var parser = squabble.createParser().list("FOO");
-            expect(parser.parse.bind(parser)).withArgs(["FOO"]).to.throwError();
+            expect(parser.parse.bind(parser)).withArgs(["FOO"])
+                .to.throwError();
         });
     });
 
     describe(".shortOpts", function() {
         it("should enable GNU-style short option strings", function() {
             var parser = squabble.createParser().shortOpts(),
-                result = parser.parse("-opt");
+                result = parser.parse(["-opt"]);
             
-            expect(result.length).to.be(3);
+            expect(result.length).to.be(0);
             expect(result.named["-o"]).to.be(true);
             expect(result.named["-p"]).to.be(true);
             expect(result.named["-t"]).to.be(true);
@@ -159,7 +160,8 @@ describe("ArgParser", function() {
         it("should ensure short opt not used as option value", function() {
             var parser = squabble.createParser().shortOpts().option("-o");
 
-            expect(parser.parse.bind(parser)).withArgs(["-o", "-p"]).to.throwError();
+            expect(parser.parse.bind(parser)).withArgs(["-o", "-p"])
+                .to.throwError();
         });
 
         it("should handle adjoining option value", function() {
@@ -182,7 +184,8 @@ describe("ArgParser", function() {
         it("should ensure long opt not used as option value", function() {
             var parser = squabble.createParser().longOpts().option("--opt");
 
-            expect(parser.parse.bind(parser)).withArgs(["--opt", "--foo"]).to.throwError();
+            expect(parser.parse.bind(parser)).withArgs(["--opt", "--foo"])
+                .to.throwError();
         });
 
         it("should handle delimited option value", function() {
@@ -190,13 +193,15 @@ describe("ArgParser", function() {
                 result = parser.parse(["--foo=bar", "--bar:baz"]);
 
             expect(result.named["--foo"]).to.be("bar");
-            expect(result.named["--bar"]).to.be("baz");
+            expect(result.named["--bar:baz"]).to.be(true);
         });
 
         describe("w/ string argument", function() {
             it("should customize the supported delimiters", function() {
-                var parser = squabble.createParser().longOpts(">;"),
-                    result = parser.parse(["--baz>bang", "--biff;bong", "--foo=bar"]);
+                var parser = squabble.createParser().longOpts(">:"),
+                    result = parser.parse(
+                        ["--baz>bang", "--biff:bong", "--foo=bar"]
+                    );
                 
                 expect(result.named["--baz"]).to.be("bang");
                 expect(result.named["--biff"]).to.be("bong");
