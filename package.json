@@ -1,6 +1,6 @@
 {
   "name": "squabble",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Parse GNU style command line arguments",
   "main": "squabble.js",
   "scripts": {
