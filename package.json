@@ -1,0 +1,29 @@
+{
+  "name": "squabble",
+  "version": "0.0.1",
+  "description": "Parse GNU style command line arguments",
+  "main": "squabble.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "propertize": "~1"
+  },
+  "devDependencies": {
+    "mocha": "~1",
+    "expect.js": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/richRemer/squabble.git"
+  },
+  "keywords": [
+    "argv",
+    "cli"
+  ],
+  "author": "Richard Remer (reanjr@gmail.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/richRemer/squabble/issues"
+  }
+}
