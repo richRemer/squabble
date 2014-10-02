@@ -192,16 +192,6 @@ assert(args.named.BIFF === false);
 assert(args.named.BAZ === "carrot");
 ```
 
-Testing
--------
-
-The `squabble` module is fairly well tested.  Use `mocha` from the package dir
-to run the automated unit tests.
-
-```sh
-$ mocha
-```
-
 ### That's it?  What if I want X to do Y with Zs?
 
 That's what `match` is for.  Provide a string or RegExp to match args against
@@ -232,7 +222,18 @@ args = parser.parse(["-"]);
 assert(args[0] === process.stdin);
 ```
 
-### Squabble?
+Testing
+-------
+
+The `squabble` module is fairly well tested.  Use `mocha` from the package dir
+to run the automated unit tests.
+
+```sh
+$ mocha
+```
+
+Squabble?
+---------
 
 Yeah, `squabble` (like a fight or *argument*; get it?  It's funny...)
 
