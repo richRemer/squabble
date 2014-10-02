@@ -47,7 +47,7 @@ assert(args.named["--foo"] === "Hey");
 ### What about shit like --all which doesn't have an argument?
 
 ```js
-// you can define it as a flag (flags have no arguments)
+// you can define it as a `flag` (flags have no arguments)
 var parser = require("squabble").createParser().flag("--all"),
     args = parser.parse(["--all", "file.foo"]);
 
@@ -58,7 +58,7 @@ assert(args.named["--all"] === true);
 ### ...and if I want a short option with an argument?
 
 ```js
-// you can define that with "option" (the counterpart to "flag")
+// you can define that with `option` (options require an argument)
 var parser = require("squabble").createParser().option("-f"),
     args = parser.parse(["-f", "file.foo"]);
 
@@ -67,8 +67,8 @@ assert(args.named["-f"] === "file.foo");
 
 ### OK, but what about -vvv for extra verbose logging?
 
-```
-// "count" options count the occurrences
+```js
+// you can count the occurrences of an arg with `count`
 var parser = require("squabble").createParser().shortOpts().count("-v"),
     args = parser.parse(["-vvv"]);
 
@@ -100,7 +100,7 @@ assert(args.named["-I", "/home/me/src/headers"]);
 ### With gcc, you can actually use -I multiple times...
 
 ```js
-// oh yeah... that's what "list" options are for
+// oh yeah... that's what `list` is for
 var parser = require("squabble").createParser().shortOpts().list("-I"),
     args = parser.parser(["-I/path", "-I/other/path"]);
 
@@ -128,8 +128,8 @@ $ mocha
 
 ### Meh... well, is that it?
 
-```
-// hmm... actually, you can do some crazy shit with ".match"
+```js
+// hmm... actually, you can do some crazy shit with `match`
 var parser = require("squabble").createParser(),
     args;
 
