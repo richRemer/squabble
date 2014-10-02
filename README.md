@@ -192,7 +192,23 @@ assert(args.named.BIFF === false);
 assert(args.named.BAZ === "carrot");
 ```
 
-### That's it?  What if I want X to do Y with Zs?
+### Can I set a default besides `false`?
+
+Yeah, with the aptly named `default` method.  This works on any named argument,
+including short opts and long opts.  If you use name aliases, you need to set
+the default for each alias.
+
+```js
+var parser = require("squabble").createParser()
+        .option("-t", "--tmpdir")
+        .default("-t", "--tmpdir", "/tmp"),
+    args = parser.parse([]);
+
+assert(args.named["-t"] === "/tmp");
+assert(args.named["--tmpdir"] === "/tmp");
+```
+
+### What if I want X to do Y with Zs?
 
 That's what `match` is for.  Provide a string or RegExp to match args against
 (exact string matches are always matched first) and a parse function which is

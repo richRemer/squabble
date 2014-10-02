@@ -231,4 +231,15 @@ describe("ArgParser", function() {
             });
         });
     });
+
+    describe(".default", function() {
+        it("should define default for missing named argument", function() {
+            var parser = squabble.createParser()
+                    .default("foo", "bar", "baz"),
+                result = parser.parse([]);
+            
+            expect(result.named.foo).to.be("baz");
+            expect(result.named.bar).to.be("baz");
+        });
+    });
 });
