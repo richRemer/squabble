@@ -1,74 +1,106 @@
 squabble Command Line Argument Parser
 =====================================
 
-Fuck, that seems completely unnecessary, why another one?
----------------------------------------------------------
-Why **not** another one?
+Fuck... why the hell would you make another one?
+------------------------------------------------
+Why **not** another one?  Frankly, I could not find a small library to handle
+adjoined short options (*e.g.*, in `gcc` where the argument can appear with the
+option without any delimiting space or character; define `-DFOO=BAR`).  The
+rest is just personal preference.
 
-Simple, minimal, flexible.  It's possible `squabble` accomplishes one or more of
-those goals.  It also may *arguably* suck.
+### Minimal
+The `squabble` module doesn't provide a lot of micro-settings to exactly
+configure the parser, but hopefully provides just enough sensible settings to
+serve most purposes with minimal fuss.
 
-    See what I did there?  I'm fucking witty.  squabble: syn. argument. Ha!
+### Unassuming
+Besides the couple of options available, the parser makes very few assumptions
+about the way you want your arguments parsed.  If you don't want args beginning
+with a hyphen to be treated as options, that's cool.  If you like Windows-style
+options, `squabble` doesn't have you covered, but it also doesn't get in your
+way.
 
-Ohhh K, how's this shit work?
------------------------------
+### Flexible
+Even though there are not many settings or a complicated API, `squabble` still
+manages to provide some flexibility through the `match` function can match by
+regular expression and invoke a custom handler.  Several of the `squabble`
+functions are just wrappers around the `match` function with a handler that
+performs additional parsing.  This could be used to add java or Windows style
+options, if you wish (but keep in mind, java style won't play nicely with the
+`shortOpts` method).
+
+How's This Shit Work?
+---------------------
+
+The most straightforward example is to create a parser and call its `parse`
+method.  By default, it will use the args from process.argv.slice(2).  You can
+also pass an array of args instead.  In any case, the default parser will
+simply return a result containing the provided arguments.
 
 ```js
-// you could try something like this to start
-var args = require("squabble").createParser().parse();
-```
-
-### What'll that get me?
-
-```js
-// not much, just the args from process.argv or the ones you pass
 var parser = require("squabble").createParser(),
-    args = parser.parse(["-a", "--foo", "Hey", "You"]);
+    args;
 
+// parse global process arguments
+args = parser.parse();
+
+// parse specified arguments
+args = parser.parse(["-a", "--foo", "Hey", "You"]);
 assert(args[0] === "-a");
 assert(args[1] === "--foo");
 assert(args[2] === "Hey");
 assert(args[3] === "You");
 ```
 
-### That's actually not useful at all
+### That's not actually useful at all
+
+The default parser isn't very useful.  Calling a few methods on the parser
+before parsing will enable some useful auto-magic.  The `shortOpts` method
+will enable single letter flags prefixed by a single hyphen, `longOpts` will
+enable arbitrarily-long options prefixed by a double hyphen.  Finally, the
+`stopper` method will enable the "--" option terminator.
 
 ```js
 // really?  hmm... if you want some automagic, try this
 var parser = require("squabble").createParser()
         .shortOpts().longOpts().stopper(),
-    args = parser.parse(["-a", "--foo", "Hey", "You"]);
+    args = parser.parse(["-a", "--foo", "Hey", "You", "--", "--bar"]);
 
 assert(args[0] === "You");
+assert(args[1] == "--bar");
 assert(args.named["-a"] === true);
 assert(args.named["--foo"] === "Hey");
 ```
 
-### What about shit like --all which doesn't have an argument?
+### I'd like some long options without no argument, like `--all`
+
+The `shortOpts` and `longOpts` methods are useful to quickly start parsing, but
+by default, short options *do not* accept an argument, and long options *do*.
+Long options are also OK with *not* having an argument if one isn't present.
+For any particular argument, you can use the `flag` or `option` method to
+reject or accept arguments, respectively.  Any named argument defined in this
+manner will be set to `false` if the argument was not specified.
 
 ```js
-// you can define it as a `flag` (flags have no arguments)
-var parser = require("squabble").createParser().flag("--all"),
-    args = parser.parse(["--all", "file.foo"]);
+var parser = require("squabble").createParser()
+        .flag("--all").option("-o").flag("-x")
+    args = parser.parse(["--all", "file.foo", "-o", "output.txt"]);
 
 assert(args[0] === "file.foo");
 assert(args.named["--all"] === true);
+assert(args.named["-o"] === "output.txt");
+assert(args.named["-x"] === false);
 ```
 
-### ...and if I want a short option with an argument?
+### How do I handle extra verbosity, like -vvv?
+
+You can have the parser return a count of the number of times an argument was
+passed, if you prefer.  Just use the `count` method on the parser before
+parsing.  You must also specify `shortOpts` if you want to combine them all
+into one argument.  Without `shortOpts`, "-v -v -v" would be needed to do the
+same thing.
 
 ```js
-// you can define that with `option` (options require an argument)
-var parser = require("squabble").createParser().option("-f"),
-    args = parser.parse(["-f", "file.foo"]);
-
-assert(args.named["-f"] === "file.foo");
-```
-
-### OK, but what about -vvv for extra verbose logging?
-
-```js
-// you can count the occurrences of an arg with `count`
 var parser = require("squabble").createParser().shortOpts().count("-v"),
     args = parser.parse(["-vvv"]);
 
@@ -77,8 +109,10 @@ assert(args.named["-v"] === 3);
 
 ### Can I mix that with --verbose somehow?
 
+For any of the methods which define a named argument, you can specify more than
+one name and they will all act as aliases for one another.
+
 ```js
-// yeah...
 var parser = require("squabble").createParser()
         .shortOpts().count("-v", "--verbose"),
     args = parser.parse(["-vv", "--verbose"]);
@@ -87,20 +121,24 @@ assert(args.named["-v"] === 3);
 assert(args.named["--verbose"] === 3);
 ```
 
-### Can I smoosh the short option together with its value like gcc?
+### How do you enable smooshed short option arguments?
+
+Any time you use the `shortOpts` method, any explicitly defined short option
+which needs an argument will also permit that argument to be *attached* to the
+option.
 
 ```js
-// yeah, any time you use the shortOpts method, that's legit
 var parser = require("squabble").createParser().shortOpts().option("-I"),
     args = parser.parse(["-I/home/me/src/headers"]);
 
-assert(args.named["-I", "/home/me/src/headers"]);
+assert(args.named["-I"] === "/home/me/src/headers");
 ```
 
-### With gcc, you can actually use -I multiple times...
+### The `gcc` -I option actually allows any number of arguments
+
+Tru'dat.  The `list` method handles that situation.
 
 ```js
-// oh yeah... that's what `list` is for
 var parser = require("squabble").createParser().shortOpts().list("-I"),
     args = parser.parser(["-I/path", "-I/other/path"]);
 
@@ -108,34 +146,85 @@ assert(args.named["-I"][0] === "/path");
 assert(args.named["-I"][1] === "/other/path");
 ```
 
-### What the hell was that `stopper` nonsense up above?
+### What about positional arguments?
+
+If you have positional arguments which must always be present, you can assign a
+name to that position to let `squabble` handle it with the `required` method.
 
 ```js
-// that's that GNU shit where you use -- to end option parsing
-var parser = require("squabble").createParser().shortOpts().stopper(),
-    args = parser.parse(["-a", "--", "-b"]);
+var parser = require("squabble").createParser()
+        .required("METHOD").required("URL").shortOpts(),
+    args = parser.parse(["-x", "GET", "example.com"]);
 
-assert(args.named["-a"] === true);
-assert(args[0] === "-b");
+assert(args.named["-x"] === true);
+assert(args.named["METHOD"] === "GET");
+assert(args.named["URL"] === "example.com");
 ```
 
-### Well, that doesn't seem entirely useless... are there unit tests?
+### What if I want an optional positional argument
+
+You can do that, too, with the `optional` method.  The order of optional args
+is maintained, but the position of the optional arguments in relation to the
+required arguments is determined at the time the FIRST optional argument is
+added.  This means you can have any number of named optional args, but they
+must appear contiguously together between any required arguments.
+
+```js
+var parser = require("squabble").createParser()
+        .required("FOO")
+        .optional("BAR")
+        .required("BAZ")
+        .optional("BIFF"),
+    args = parser.parse(["apple", "banana", "carrot", "date"]);
+
+// Note: even though BAZ comes before BIFF in definition, BIFF comes right
+// after the previous optional argument BAR, and so comes first
+assert(args.named.FOO === "apple");
+assert(args.named.BAR === "banana");
+assert(args.named.BIFF === "carrot");
+assert(args.named.BAZ === "date");
+
+// but if an argument is removed, BIFF is the one that doesn't get a value
+args = parser.parse(["apple", "banana", "carrot"];
+assert(args.named.FOO === "apple");
+assert(args.named.BAR === "banana");
+assert(args.named.BIFF === false);
+assert(args.named.BAZ === "carrot");
+```
+
+Testing
+-------
+
+The `squabble` module is fairly well tested.  Use `mocha` from the package dir
+to run the automated unit tests.
 
 ```sh
-# yeah, run mocha from the package directory
 $ mocha
 ```
 
-### Meh... well, is that it?
+### That's it?  What if I want X to do Y with Zs?
+
+That's what `match` is for.  Provide a string or RegExp to match args against
+(exact string matches are always matched first) and a parse function which is
+called when a matching argument is encountered.  The parse function receives
+the current result so far, the remaining arguments after the current one, and
+the current argument value.
+
+There are a couple ways to use this.  The `shortOpts` method matches anything
+beginning with a hyphen (which is not explicitly defined), breaks them up into
+multiple single letter options, and `unshift`s those back onto the args so they
+can get parsed normally.  The `longOpts` method matches on double-hyphens and
+sets named result values directly.
+
+As an example, consider the GNU-ism where the "-" argument can be used in place
+of a filename to mean STDIN.  The following code snippet handles that.
 
 ```js
-// hmm... actually, you can do some crazy shit with `match`
 var parser = require("squabble").createParser(),
     args;
 
-// not needed here, but args has the remaining args after the current arg
-parser.match("-", function(result, args, arg) {
-    assert(arg === "-");
+// unused callback parameters include args and arg.
+parser.match("-", function(result) {
     result.push(process.stdin);
 });
 
@@ -143,7 +232,7 @@ args = parser.parse(["-"]);
 assert(args[0] === process.stdin);
 ```
 
-### Shit appears marginally useful... what's it called? `squabble`?
+### Squabble?
 
-    yeah, squabble (like a fight or *argument*; get it?  It's funny...)
+Yeah, `squabble` (like a fight or *argument*; get it?  It's funny...)
 
