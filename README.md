@@ -3,10 +3,21 @@ squabble Command Line Argument Parser
 
 Fuck... why the hell would you make another one?
 ------------------------------------------------
-Why **not** another one?  Frankly, I could not find a small library to handle
+Why **not** another one?  Frankly, I could not find a good library to handle
 attached short options (*e.g.*, in `gcc` where the argument can appear with the
-option without any delimiting space or character; define `-DFOO=BAR`).  The
+option without any delimiting space or character: `-DFOO=BAR`).  The
 rest is just personal preference.
+
+If you're looking for something a bit more full featured, I would suggest
+[yargs](https://github.com/chevex/yargs), which approaches the problem similarly
+and is pirate themed.  The `yargs` module includes things like online help and
+usage, but notably does not support attached short options unless the value is
+numeric.  I found similar issues with `minimist`.  Of special note is `optimist`
+which is quite popular, but has been deprecated and replaced with `yargs`.
+
+The other arg parsing modules I found have drastically different APIs, make
+large assumptions, and some were poorly tested or documented; they all had
+something which precluded their use.
 
 ### Minimal
 The `squabble` module doesn't provide a lot of micro-settings to exactly
@@ -63,7 +74,9 @@ enable arbitrarily-long options prefixed by a double hyphen.  Finally, the
 ```js
 // really?  hmm... if you want some automagic, try this
 var parser = require("squabble").createParser()
-        .shortOpts().longOpts().stopper(),
+        .shortOpts()
+        .longOpts()
+        .stopper(),
     args = parser.parse(["-a", "--foo", "Hey", "You", "--", "--bar"]);
 
 assert(args[0] === "You");
@@ -72,7 +85,7 @@ assert(args.named["-a"] === true);
 assert(args.named["--foo"] === "Hey");
 ```
 
-### I'd like some long options without no argument, like `--all`
+### I'd like some long options with no argument, like `--all`
 
 The `shortOpts` and `longOpts` methods are useful to quickly start parsing, but
 by default, short options *do not* accept an argument, and long options *do*.
@@ -83,7 +96,9 @@ manner will be set to `false` if the argument was not specified.
 
 ```js
 var parser = require("squabble").createParser()
-        .flag("--all").option("-o").flag("-x")
+        .option("-o")
+        .flag("-x")
+        .flag("--all"),
     args = parser.parse(["--all", "file.foo", "-o", "output.txt"]);
 
 assert(args[0] === "file.foo");
@@ -101,7 +116,9 @@ into one argument.  Without `shortOpts`, "-v -v -v" would be needed to do the
 same thing.
 
 ```js
-var parser = require("squabble").createParser().shortOpts().count("-v"),
+var parser = require("squabble").createParser()
+        .shortOpts()
+        .count("-v"),
     args = parser.parse(["-vvv"]);
 
 assert(args.named["-v"] === 3);
@@ -114,7 +131,8 @@ one name and they will all act as aliases for one another.
 
 ```js
 var parser = require("squabble").createParser()
-        .shortOpts().count("-v", "--verbose"),
+        .shortOpts()
+        .count("-v", "--verbose"),
     args = parser.parse(["-vv", "--verbose"]);
 
 assert(args.named["-v"] === 3);
@@ -128,7 +146,9 @@ which needs an argument will also permit that argument to be *attached* to the
 option.
 
 ```js
-var parser = require("squabble").createParser().shortOpts().option("-I"),
+var parser = require("squabble").createParser()
+        .shortOpts()
+        .option("-I"),
     args = parser.parse(["-I/home/me/src/headers"]);
 
 assert(args.named["-I"] === "/home/me/src/headers");
@@ -139,7 +159,9 @@ assert(args.named["-I"] === "/home/me/src/headers");
 True 'dat.  The `list` method handles that situation.
 
 ```js
-var parser = require("squabble").createParser().shortOpts().list("-I"),
+var parser = require("squabble").createParser()
+        .shortOpts(
+        .list("-I"),
     args = parser.parser(["-I/path", "-I/other/path"]);
 
 assert(args.named["-I"][0] === "/path");
@@ -153,7 +175,9 @@ name to that position to let `squabble` handle it with the `required` method.
 
 ```js
 var parser = require("squabble").createParser()
-        .required("METHOD").required("URL").shortOpts(),
+        .required("METHOD")
+        .required("URL")
+        .shortOpts(),
     args = parser.parse(["-x", "GET", "example.com"]);
 
 assert(args.named["-x"] === true);
@@ -178,18 +202,18 @@ var parser = require("squabble").createParser()
     args = parser.parse(["apple", "banana", "carrot", "date"]);
 
 // Note: even though BAZ comes before BIFF in definition, BIFF comes right
-// after the previous optional argument BAR, and so comes first
+// after the previous optional argument BAR, and so comes first during parsing
 assert(args.named.FOO === "apple");
 assert(args.named.BAR === "banana");
-assert(args.named.BIFF === "carrot");
 assert(args.named.BAZ === "date");
+assert(args.named.BIFF === "carrot");
 
-// but if an argument is removed, BIFF is the one that doesn't get a value
+// but if an argument is removed, BIFF is the one which misses a value
 args = parser.parse(["apple", "banana", "carrot"];
 assert(args.named.FOO === "apple");
 assert(args.named.BAR === "banana");
-assert(args.named.BIFF === false);
 assert(args.named.BAZ === "carrot");
+assert(args.named.BIFF === false);
 ```
 
 ### Can I set a default besides `false`?
@@ -236,6 +260,19 @@ parser.match("-", function(result) {
 args = parser.parse(["-"]);
 assert(args[0] === process.stdin);
 ```
+
+What's next?
+============
+
+The following is a list of enhancements expected to be added to `squabble` in
+the near future.
+
+ * `strict`/`loose` to throw errors for undefined options
+ * `optionType` to define simple option parse rules
+ * refactor `shortOpts` and `longOpts` into modules using `optionType`
+ * `posixOpts`, `gnuOpts`, `javaOpts`, `winOpts` modules
+ * extend `default` with shortcut methods such as
+    `parser.default.option("-v", "--verbose", 0)`
 
 Testing
 -------
