@@ -4,7 +4,7 @@ squabble Command Line Argument Parser
 Fuck... why the hell would you make another one?
 ------------------------------------------------
 Why **not** another one?  Frankly, I could not find a small library to handle
-adjoined short options (*e.g.*, in `gcc` where the argument can appear with the
+attached short options (*e.g.*, in `gcc` where the argument can appear with the
 option without any delimiting space or character; define `-DFOO=BAR`).  The
 rest is just personal preference.
 
@@ -22,18 +22,18 @@ way.
 
 ### Flexible
 Even though there are not many settings or a complicated API, `squabble` still
-manages to provide some flexibility through the `match` function can match by
-regular expression and invoke a custom handler.  Several of the `squabble`
-functions are just wrappers around the `match` function with a handler that
-performs additional parsing.  This could be used to add java or Windows style
-options, if you wish (but keep in mind, java style won't play nicely with the
-`shortOpts` method).
+manages to provide some flexibility through the `match` function, which  can
+match by regular expression and invoke a custom handler.  Several of the
+`squabble` functions are just wrappers around the `match` function with a
+handler that performs additional parsing.  This could be used to add java or
+Windows style options, if you wish (but keep in mind, java style won't play
+nicely with the `shortOpts` method).
 
 How's This Shit Work?
 ---------------------
 
 The most straightforward example is to create a parser and call its `parse`
-method.  By default, it will use the args from process.argv.slice(2).  You can
+method.  By default, it will use the args from `process.argv.slice(2)`.  You can
 also pass an array of args instead.  In any case, the default parser will
 simply return a result containing the provided arguments.
 
@@ -121,7 +121,7 @@ assert(args.named["-v"] === 3);
 assert(args.named["--verbose"] === 3);
 ```
 
-### How do you enable smooshed short option arguments?
+### How do you enable attached short option arguments?
 
 Any time you use the `shortOpts` method, any explicitly defined short option
 which needs an argument will also permit that argument to be *attached* to the
@@ -136,7 +136,7 @@ assert(args.named["-I"] === "/home/me/src/headers");
 
 ### The `gcc` -I option actually allows any number of arguments
 
-Tru'dat.  The `list` method handles that situation.
+True 'dat.  The `list` method handles that situation.
 
 ```js
 var parser = require("squabble").createParser().shortOpts().list("-I"),
@@ -219,10 +219,9 @@ the current argument value.
 There are a couple ways to use this.  The `shortOpts` method matches anything
 beginning with a hyphen (which is not explicitly defined), breaks them up into
 multiple single letter options, and `unshift`s those back onto the args so they
-can get parsed normally.  The `longOpts` method matches on double-hyphens and
-sets named result values directly.
+can be re-parsed as separate arguments.  The `longOpts` does something similar.
 
-As an example, consider the GNU-ism where the "-" argument can be used in place
+Another example might be the GNU-ism where the "-" argument can be used in place
 of a filename to mean STDIN.  The following code snippet handles that.
 
 ```js
