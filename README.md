@@ -234,7 +234,7 @@ assert(args.named["--tmpdir"] === "/tmp");
 
 ### What if I want X to do Y with Zs?
 
-That's what `match` is for.  Provide a string or RegExp to match args against
+That's what `rule` is for.  Provide a string or RegExp to match args against
 (exact string matches are always matched first) and a parse function which is
 called when a matching argument is encountered.  The parse function receives
 the current result so far, the remaining arguments after the current one, and
@@ -253,7 +253,7 @@ var parser = require("squabble").createParser(),
     args;
 
 // unused callback parameters include args and arg.
-parser.match("-", function(result) {
+parser.rule("-", function(result) {
     result.push(process.stdin);
 });
 
