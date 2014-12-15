@@ -1,13 +1,13 @@
 {
   "name": "squabble",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Parse GNU style command line arguments",
   "main": "squabble.js",
   "scripts": {
     "test": "mocha"
   },
   "dependencies": {
-    "propertize": "~1"
+    "propertize": "*"
   },
   "devDependencies": {
     "mocha": "~1",
