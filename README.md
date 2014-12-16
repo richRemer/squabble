@@ -33,9 +33,9 @@ way.
 
 ### Flexible
 Even though there are not many settings or a complicated API, `squabble` still
-manages to provide some flexibility through the `match` function, which  can
+manages to provide some flexibility through the `rule` function, which  can
 match by regular expression and invoke a custom handler.  Several of the
-`squabble` functions are just wrappers around the `match` function with a
+`squabble` functions are just wrappers around the `rule` function with a
 handler that performs additional parsing.  This could be used to add java or
 Windows style options, if you wish (but keep in mind, java style won't play
 nicely with the `shortOpts` method).
@@ -194,11 +194,11 @@ added.  This means you can have any number of named optional args, but they
 must appear contiguously together between any required arguments.
 
 ```js
-var parser = require("squabble").createParser()
-        .required("FOO")
-        .optional("BAR")
-        .required("BAZ")
-        .optional("BIFF"),
+var parser = require("squabble").createParser() // parses like:
+        .required("FOO")                        //   .required("FOO")
+        .optional("BAR")                        //   .optional("BAR")
+        .required("BAZ")                        //   .optional("BIFF")
+        .optional("BIFF"),                      //   .required("BAZ")
     args = parser.parse(["apple", "banana", "carrot", "date"]);
 
 // Note: even though BAZ comes before BIFF in definition, BIFF comes right
